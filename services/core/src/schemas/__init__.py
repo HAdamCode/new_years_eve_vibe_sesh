@@ -6,6 +6,12 @@ from .study_sessions import (
     StudySessionUpdate,
 )
 from .study_passages import StudyPassageCreate, StudyPassageOut, StudyPassageUpdate
+from .study_passage_comments import (
+    StudyPassageCommentCreate,
+    StudyPassageCommentOut,
+    StudyPassageCommentUpdate,
+)
+from .study_passage_likes import StudyPassageLikeOut
 from .study_questions import StudyQuestionCreate, StudyQuestionOut, StudyQuestionUpdate
 from .study_question_responses import (
     StudyQuestionResponseCreate,
@@ -25,6 +31,10 @@ __all__ = [
     "StudyPassageCreate",
     "StudyPassageOut",
     "StudyPassageUpdate",
+    "StudyPassageCommentCreate",
+    "StudyPassageCommentOut",
+    "StudyPassageCommentUpdate",
+    "StudyPassageLikeOut",
     "StudyQuestionCreate",
     "StudyQuestionOut",
     "StudyQuestionUpdate",

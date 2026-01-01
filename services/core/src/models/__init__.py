@@ -1,6 +1,8 @@
 from .group import Group
 from .group_member import GroupMember, GroupRole
 from .study_passage import StudyPassage
+from .study_passage_comment import StudyPassageComment
+from .study_passage_like import StudyPassageLike
 from .study_question import StudyQuestion
 from .study_question_response import StudyQuestionResponse
 from .study import Study
@@ -13,6 +15,8 @@ __all__ = [
     "GroupRole",
     "Study",
     "StudyPassage",
+    "StudyPassageComment",
+    "StudyPassageLike",
     "StudyQuestion",
     "StudyQuestionResponse",
     "StudySession",
