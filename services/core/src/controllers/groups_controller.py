@@ -30,6 +30,15 @@ def get_groups(
     return list_groups(db, user_sub)
 
 
+@router.get("/me", response_model=list[GroupOut])
+def get_my_groups(
+    claims: dict[str, object] = Depends(cognito_auth_required),
+    db: Session = Depends(get_db),
+) -> list[GroupOut]:
+    user_sub = _get_user_sub(claims)
+    return list_groups(db, user_sub)
+
+
 @router.post("", response_model=GroupOut, status_code=status.HTTP_201_CREATED)
 def post_group(
     payload: GroupCreate,
