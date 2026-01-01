@@ -1,5 +1,7 @@
 from .group import Group
 from .group_member import GroupMember, GroupRole
+from .group_session import GroupSession
+from .group_study import GroupStudy
 from .invite_code import InviteCode
 from .study import Study
 from .study_passage import StudyPassage
@@ -15,6 +17,8 @@ __all__ = [
     "Group",
     "GroupMember",
     "GroupRole",
+    "GroupSession",
+    "GroupStudy",
     "InviteCode",
     "Study",
     "StudyPassage",

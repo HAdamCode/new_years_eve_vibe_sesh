@@ -24,6 +24,11 @@ class StudyPassageLike(Base):
         ForeignKey("study_passages.id", ondelete="CASCADE"),
         nullable=False,
     )
+    group_session_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("group_sessions.id", ondelete="CASCADE"),
+        nullable=True,
+    )
     group_id = Column(
         UUID(as_uuid=True),
         ForeignKey("groups.id", ondelete="CASCADE"),

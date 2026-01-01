@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from auth.cognito import cognito_auth_required
 from db import get_db
 from models.group_member import GroupMember
+from models.group_session import GroupSession
+from models.group_study import GroupStudy
 from models.study import Study
 from models.study_passage import StudyPassage
 from models.study_passage_comment import StudyPassageComment
@@ -50,6 +52,39 @@ def _get_group_for_passage(db: Session, passage_id: UUID) -> UUID | None:
     if not study:
         return None
     return study.group_id
+
+
+def _ensure_group_session(db: Session, group_id: UUID, session_id: UUID) -> GroupSession:
+    session = db.get(StudySession, session_id)
+    if not session:
+        raise ValueError("session_not_found")
+
+    group_study = db.scalar(
+        select(GroupStudy).where(
+            GroupStudy.group_id == group_id,
+            GroupStudy.study_id == session.study_id,
+        )
+    )
+    if not group_study:
+        group_study = GroupStudy(group_id=group_id, study_id=session.study_id)
+        db.add(group_study)
+        db.flush()
+
+    group_session = db.scalar(
+        select(GroupSession).where(
+            GroupSession.group_study_id == group_study.id,
+            GroupSession.study_session_id == session_id,
+        )
+    )
+    if not group_session:
+        group_session = GroupSession(
+            group_study_id=group_study.id,
+            study_session_id=session_id,
+        )
+        db.add(group_session)
+        db.flush()
+
+    return group_session
 
 
 def _is_group_member(db: Session, group_id: UUID, user_sub: str) -> bool:
@@ -197,12 +232,13 @@ def get_likes(
 def post_like(
     session_id: UUID,
     passage_id: UUID,
+    group_id: UUID,
     claims: dict[str, object] = Depends(cognito_auth_required),
     db: Session = Depends(get_db),
 ) -> StudyPassageLikeOut:
     user_sub = _get_user_sub(claims)
-    group_id = _get_group_for_passage(db, passage_id)
-    if not group_id:
+    passage = db.get(StudyPassage, passage_id)
+    if not passage:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Passage not found",
@@ -224,9 +260,20 @@ def post_like(
     if existing:
         return existing
 
+    try:
+        group_session = _ensure_group_session(db, group_id, session_id)
+    except ValueError as exc:
+        if str(exc) == "session_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found",
+            ) from exc
+        raise
+
     item = StudyPassageLike(
         passage_id=passage_id,
         group_id=group_id,
+        group_session_id=group_session.id,
         user_sub=user_sub,
     )
     db.add(item)
@@ -284,13 +331,14 @@ def get_comments(
 def post_comment(
     session_id: UUID,
     passage_id: UUID,
+    group_id: UUID,
     payload: StudyPassageCommentCreate,
     claims: dict[str, object] = Depends(cognito_auth_required),
     db: Session = Depends(get_db),
 ) -> StudyPassageCommentOut:
     user_sub = _get_user_sub(claims)
-    group_id = _get_group_for_passage(db, passage_id)
-    if not group_id:
+    passage = db.get(StudyPassage, passage_id)
+    if not passage:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Passage not found",
@@ -302,9 +350,20 @@ def post_comment(
             detail="Only group members can comment",
         )
 
+    try:
+        group_session = _ensure_group_session(db, group_id, session_id)
+    except ValueError as exc:
+        if str(exc) == "session_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found",
+            ) from exc
+        raise
+
     item = StudyPassageComment(
         passage_id=passage_id,
         group_id=group_id,
+        group_session_id=group_session.id,
         user_sub=user_sub,
         comment=payload.comment,
     )
