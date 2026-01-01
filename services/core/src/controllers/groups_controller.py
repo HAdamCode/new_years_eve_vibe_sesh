@@ -6,7 +6,14 @@ from sqlalchemy.orm import Session
 from auth.cognito import cognito_auth_required
 from db import get_db
 from schemas.groups import GroupCreate, GroupMemberOut, GroupOut
+from sqlalchemy import select
+
+from models.group_member import GroupMember
+from models.study import Study
+from models.study_session import StudySession
+from models.study_session_note import StudySessionNote
 from services.groups_service import create_group, join_group, leave_group, list_groups
+from schemas.study_session_notes import StudySessionNoteOut
 
 router = APIRouter(prefix="/groups", tags=["groups"])
 
@@ -37,6 +44,26 @@ def get_my_groups(
 ) -> list[GroupOut]:
     user_sub = _get_user_sub(claims)
     return list_groups(db, user_sub)
+
+
+@router.get("/notes", response_model=list[StudySessionNoteOut])
+def get_group_notes(
+    claims: dict[str, object] = Depends(cognito_auth_required),
+    db: Session = Depends(get_db),
+) -> list[StudySessionNoteOut]:
+    user_sub = _get_user_sub(claims)
+    return list(
+        db.scalars(
+            select(StudySessionNote)
+            .join(StudySession, StudySessionNote.session_id == StudySession.id)
+            .join(Study, StudySession.study_id == Study.id)
+            .join(GroupMember, GroupMember.group_id == Study.group_id)
+            .where(
+                GroupMember.user_sub == user_sub,
+                StudySessionNote.group_id == GroupMember.group_id,
+            )
+        )
+    )
 
 
 @router.post("", response_model=GroupOut, status_code=status.HTTP_201_CREATED)

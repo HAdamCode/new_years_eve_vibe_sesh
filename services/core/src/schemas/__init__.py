@@ -18,6 +18,7 @@ from .study_question_responses import (
     StudyQuestionResponseOut,
     StudyQuestionResponseUpdate,
 )
+from .study_session_notes import StudySessionNoteCreate, StudySessionNoteOut, StudySessionNoteUpdate
 from .user import UserCreate, UserResponse, UserUpdate
 
 __all__ = [
@@ -41,6 +42,9 @@ __all__ = [
     "StudyQuestionResponseCreate",
     "StudyQuestionResponseOut",
     "StudyQuestionResponseUpdate",
+    "StudySessionNoteCreate",
+    "StudySessionNoteOut",
+    "StudySessionNoteUpdate",
     "UserCreate",
     "UserResponse",
     "UserUpdate",

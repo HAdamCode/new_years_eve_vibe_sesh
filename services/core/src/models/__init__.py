@@ -7,6 +7,7 @@ from .study_passage_comment import StudyPassageComment
 from .study_passage_like import StudyPassageLike
 from .study_question import StudyQuestion
 from .study_question_response import StudyQuestionResponse
+from .study_session_note import StudySessionNote
 from .study_session import StudySession
 from .user import User
 
@@ -21,6 +22,7 @@ __all__ = [
     "StudyPassageLike",
     "StudyQuestion",
     "StudyQuestionResponse",
+    "StudySessionNote",
     "StudySession",
     "User",
 ]

@@ -6,6 +6,12 @@ from sqlalchemy.orm import Session
 from auth.cognito import cognito_auth_required
 from db import get_db
 from schemas.studies import StudyCreate, StudyOut, StudyUpdate
+from schemas.study_session_notes import StudySessionNoteOut
+from sqlalchemy import select
+
+from models.study import Study
+from models.study_session import StudySession
+from models.study_session_note import StudySessionNote
 from services.studies_service import create_study, delete_study, list_studies, update_study
 
 router = APIRouter(prefix="/groups/{group_id}/studies", tags=["studies"])
@@ -28,6 +34,27 @@ def get_studies(
     db: Session = Depends(get_db),
 ) -> list[StudyOut]:
     return list_studies(db, group_id)
+
+
+@router.get("/notes", response_model=list[StudySessionNoteOut])
+def get_study_notes(
+    group_id: UUID,
+    study_id: UUID,
+    _claims: dict[str, object] = Depends(cognito_auth_required),
+    db: Session = Depends(get_db),
+) -> list[StudySessionNoteOut]:
+    return list(
+        db.scalars(
+            select(StudySessionNote)
+            .join(StudySession, StudySessionNote.session_id == StudySession.id)
+            .join(Study, StudySession.study_id == Study.id)
+            .where(
+                Study.id == study_id,
+                Study.group_id == group_id,
+                StudySessionNote.group_id == group_id,
+            )
+        )
+    )
 
 
 @router.post("", response_model=StudyOut, status_code=status.HTTP_201_CREATED)
