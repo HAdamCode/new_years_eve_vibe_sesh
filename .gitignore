@@ -37,3 +37,10 @@ build/
 tmp/
 temp/
 .cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
