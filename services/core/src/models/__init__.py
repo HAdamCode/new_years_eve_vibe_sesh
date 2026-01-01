@@ -2,6 +2,7 @@ from .group import Group
 from .group_member import GroupMember, GroupRole
 from .study_passage import StudyPassage
 from .study_question import StudyQuestion
+from .study_question_response import StudyQuestionResponse
 from .study import Study
 from .study_session import StudySession
 from .user import User
@@ -13,6 +14,7 @@ __all__ = [
     "Study",
     "StudyPassage",
     "StudyQuestion",
+    "StudyQuestionResponse",
     "StudySession",
     "User",
 ]

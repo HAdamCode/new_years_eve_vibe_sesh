@@ -10,6 +10,9 @@ from controllers.studies_controller import router as studies_router
 from controllers.study_sessions_controller import router as study_sessions_router
 from controllers.study_passages_controller import router as study_passages_router
 from controllers.study_questions_controller import router as study_questions_router
+from controllers.study_question_responses_controller import (
+    router as study_question_responses_router,
+)
 from controllers.user_controller import router as user_router
 
 app = FastAPI()
@@ -29,6 +32,7 @@ app.include_router(studies_router)
 app.include_router(study_sessions_router)
 app.include_router(study_passages_router)
 app.include_router(study_questions_router)
+app.include_router(study_question_responses_router)
 app.include_router(user_router)
 
 
