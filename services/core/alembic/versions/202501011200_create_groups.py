@@ -30,7 +30,12 @@ def upgrade() -> None:
         ),
     )
 
-    group_role_enum = sa.Enum("member", "leader", name="group_role")
+    group_role_enum = postgresql.ENUM(
+        "member",
+        "leader",
+        name="group_role",
+        create_type=False,
+    )
     group_role_enum.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
