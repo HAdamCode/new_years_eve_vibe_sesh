@@ -1,4 +1,5 @@
-from models.group import Group
-from models.group_member import GroupMember, GroupRole
+from .group import Group
+from .group_member import GroupMember, GroupRole
+from .user import User
 
-__all__ = ["Group", "GroupMember", "GroupRole"]
+__all__ = ["Group", "GroupMember", "GroupRole", "User"]

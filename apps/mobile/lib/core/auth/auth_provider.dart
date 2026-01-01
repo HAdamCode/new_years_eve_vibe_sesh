@@ -1,22 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/api_service.dart';
 import 'auth_service.dart';
 import 'auth_state.dart';
 
 /// Provider for the AuthService instance
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
+/// Provider for the ApiService instance
+final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
+
 /// Provider for the current auth state
 final authStateProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authService = ref.watch(authServiceProvider);
-  return AuthNotifier(authService);
+  final apiService = ref.watch(apiServiceProvider);
+  return AuthNotifier(authService, apiService);
 });
 
 /// StateNotifier for managing authentication state
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
+  final ApiService _apiService;
 
-  AuthNotifier(this._authService) : super(AuthState.initial()) {
+  AuthNotifier(this._authService, this._apiService) : super(AuthState.initial()) {
     // Check auth status when notifier is created
     checkAuthStatus();
   }
@@ -24,7 +30,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Check if user is already authenticated
   Future<void> checkAuthStatus() async {
     state = AuthState.loading();
-    state = await _authService.checkAuthStatus();
+    final authState = await _authService.checkAuthStatus();
+    state = authState;
+
+    // If authenticated, load the profile
+    if (authState.status == AuthStatus.authenticated) {
+      await loadProfile();
+    }
+  }
+
+  /// Load user profile from backend
+  Future<void> loadProfile() async {
+    if (state.status != AuthStatus.authenticated) return;
+
+    try {
+      final profile = await _apiService.getProfile();
+      state = state.copyWith(
+        displayName: profile.displayName,
+        initials: profile.initials,
+      );
+    } catch (e) {
+      // Profile loading failed, but user is still authenticated
+      // They just don't have a profile yet
+    }
+  }
+
+  /// Update user's display name
+  Future<void> updateProfile(String displayName) async {
+    try {
+      final profile = await _apiService.updateProfile(displayName);
+      state = state.copyWith(
+        displayName: profile.displayName,
+        initials: profile.initials,
+      );
+    } catch (e) {
+      rethrow;
+    }
   }
 
   /// Sign up with email and password
@@ -66,7 +107,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
   }) async {
     state = AuthState.loading();
-    state = await _authService.signIn(email: email, password: password);
+    final authState = await _authService.signIn(email: email, password: password);
+    state = authState;
+
+    // If authenticated, load the profile
+    if (authState.status == AuthStatus.authenticated) {
+      await loadProfile();
+    }
   }
 
   /// Sign out the current user

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../profile/screens/profile_screen.dart';
 import '../data/mock_data.dart';
 import '../models/group.dart';
 import '../models/study_session.dart';
@@ -82,15 +83,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background gradient
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 350,
+      backgroundColor: colorScheme.surface,
+      body: CustomScrollView(
+        slivers: [
+          // Header with gradient background
+          SliverToBoxAdapter(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -103,59 +103,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
               ),
-            ),
-          ),
-          // Decorative circles
-          Positioned(
-            top: -50,
-            right: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.05),
+              child: SafeArea(
+                bottom: false,
+                child: _buildHeaderContent(),
               ),
             ),
           ),
-          Positioned(
-            top: 100,
-            left: -80,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.03),
-              ),
-            ),
-          ),
-          // Main content
-          SafeArea(
-            child: CustomScrollView(
-              slivers: [
-                _buildHeader(),
-                _buildQuickActions(),
-                _buildGroupsSection(),
-                _buildUpcomingSection(),
-                const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
-              ],
-            ),
-          ),
+          _buildQuickActions(),
+          _buildGroupsSection(),
+          _buildUpcomingSection(),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeaderContent() {
     final theme = Theme.of(context);
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -179,39 +149,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ],
                 ),
-                // Profile avatar with logout menu
-                PopupMenuButton<String>(
-                  offset: const Offset(0, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  onSelected: (value) {
-                    if (value == 'logout') {
-                      ref.read(authStateProvider.notifier).signOut();
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'logout',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.logout_rounded,
-                            color: Theme.of(context).colorScheme.error,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Sign Out',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                // Profile avatar - tap to go to profile
+                GestureDetector(
+                  onTap: () => _navigateToProfile(),
                   child: Container(
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
@@ -235,10 +175,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                       ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        color: Colors.white,
-                        size: 24,
+                      child: Center(
+                        child: _buildAvatarContent(),
                       ),
                     ),
                   ),
@@ -277,8 +215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildStatItem(String value, String label) {
@@ -633,5 +570,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (hour < 12) return 'Morning';
     if (hour < 17) return 'Afternoon';
     return 'Evening';
+  }
+
+  void _navigateToProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProfileScreen(),
+      ),
+    );
+  }
+
+  Widget _buildAvatarContent() {
+    final authState = ref.watch(authStateProvider);
+    final initials = authState.initials;
+
+    if (initials != null && initials.isNotEmpty) {
+      return Text(
+        initials,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    return const Icon(
+      Icons.person_rounded,
+      color: Colors.white,
+      size: 24,
+    );
   }
 }

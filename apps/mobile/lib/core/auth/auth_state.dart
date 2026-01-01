@@ -25,6 +25,8 @@ class AuthState {
   final String? userId;
   final String? email;
   final String? username; // Cognito username (different from email)
+  final String? displayName;
+  final String? initials;
   final String? errorMessage;
 
   const AuthState._({
@@ -32,6 +34,8 @@ class AuthState {
     this.userId,
     this.email,
     this.username,
+    this.displayName,
+    this.initials,
     this.errorMessage,
   });
 
@@ -45,11 +49,15 @@ class AuthState {
   factory AuthState.authenticated({
     required String userId,
     required String email,
+    String? displayName,
+    String? initials,
   }) =>
       AuthState._(
         status: AuthStatus.authenticated,
         userId: userId,
         email: email,
+        displayName: displayName,
+        initials: initials,
       );
 
   /// Unauthenticated state
@@ -79,6 +87,8 @@ class AuthState {
     String? userId,
     String? email,
     String? username,
+    String? displayName,
+    String? initials,
     String? errorMessage,
   }) {
     return AuthState._(
@@ -86,6 +96,8 @@ class AuthState {
       userId: userId ?? this.userId,
       email: email ?? this.email,
       username: username ?? this.username,
+      displayName: displayName ?? this.displayName,
+      initials: initials ?? this.initials,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }

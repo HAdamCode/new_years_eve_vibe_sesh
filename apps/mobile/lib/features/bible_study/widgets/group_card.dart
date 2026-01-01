@@ -65,31 +65,6 @@ class GroupCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Decorative pattern
-              Positioned(
-                top: -20,
-                right: -20,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.1),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: -30,
-                left: -30,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                ),
-              ),
               // Content
               Padding(
                 padding: const EdgeInsets.all(18),

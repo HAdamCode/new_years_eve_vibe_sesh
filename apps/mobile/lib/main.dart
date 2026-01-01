@@ -19,11 +19,7 @@ void main() async {
   final authService = AuthService();
   await authService.configureAmplify();
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
