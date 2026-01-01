@@ -1,7 +1,7 @@
 """add invite_codes table
 
 Revision ID: 002
-Revises: 079ebd0d2b89
+Revises: 202601010500
 Create Date: 2026-01-01
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "002"
-down_revision: str = "079ebd0d2b89"
+down_revision: str = "202601010500"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

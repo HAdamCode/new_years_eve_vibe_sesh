@@ -302,6 +302,259 @@ class ApiService {
       rethrow;
     }
   }
+
+  // ===== Study Methods =====
+
+  /// List all studies for a group
+  Future<List<Study>> listStudies(String groupId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$_baseUrl/groups/$groupId/studies'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((s) => Study.fromJson(s)).toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else {
+        throw Exception('Failed to load studies');
+      }
+    } catch (e) {
+      safePrint('Error fetching studies: $e');
+      rethrow;
+    }
+  }
+
+  /// Create a new study in a group
+  Future<Study> createStudy({
+    required String groupId,
+    required String title,
+    String? description,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$_baseUrl/groups/$groupId/studies'),
+        headers: headers,
+        body: json.encode({
+          'title': title,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Study.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 403) {
+        throw Exception('Only leaders can create studies');
+      } else {
+        throw Exception('Failed to create study');
+      }
+    } catch (e) {
+      safePrint('Error creating study: $e');
+      rethrow;
+    }
+  }
+
+  /// Update a study
+  Future<Study> updateStudy({
+    required String studyId,
+    String? title,
+    String? description,
+    bool? isArchived,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/studies/$studyId'),
+        headers: headers,
+        body: json.encode({
+          if (title != null) 'title': title,
+          if (description != null) 'description': description,
+          if (isArchived != null) 'is_archived': isArchived,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return Study.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 403) {
+        throw Exception('Only leaders can update studies');
+      } else {
+        throw Exception('Failed to update study');
+      }
+    } catch (e) {
+      safePrint('Error updating study: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete a study
+  Future<void> deleteStudy(String studyId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/studies/$studyId'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        return;
+      } else if (response.statusCode == 403) {
+        throw Exception('Only leaders can delete studies');
+      } else {
+        throw Exception('Failed to delete study');
+      }
+    } catch (e) {
+      safePrint('Error deleting study: $e');
+      rethrow;
+    }
+  }
+
+  // ===== Session Methods =====
+
+  /// List all sessions for a study
+  Future<List<Session>> listSessions(String studyId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$_baseUrl/studies/$studyId/sessions'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((s) => Session.fromJson(s)).toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else {
+        throw Exception('Failed to load sessions');
+      }
+    } catch (e) {
+      safePrint('Error fetching sessions: $e');
+      rethrow;
+    }
+  }
+
+  /// Create a new session in a study
+  Future<Session> createSession({
+    required String studyId,
+    required String title,
+    String? description,
+    int? position,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$_baseUrl/studies/$studyId/sessions'),
+        headers: headers,
+        body: json.encode({
+          'title': title,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+          if (position != null) 'position': position,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Session.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 403) {
+        throw Exception('Only leaders can add sessions');
+      } else {
+        throw Exception('Failed to create session');
+      }
+    } catch (e) {
+      safePrint('Error creating session: $e');
+      rethrow;
+    }
+  }
+
+  /// Update a session
+  Future<Session> updateSession({
+    required String studyId,
+    required String sessionId,
+    String? title,
+    String? description,
+    int? position,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/studies/$studyId/sessions/$sessionId'),
+        headers: headers,
+        body: json.encode({
+          if (title != null) 'title': title,
+          if (description != null) 'description': description,
+          if (position != null) 'position': position,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return Session.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 403) {
+        throw Exception('Only leaders can update sessions');
+      } else {
+        throw Exception('Failed to update session');
+      }
+    } catch (e) {
+      safePrint('Error updating session: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete a session
+  Future<void> deleteSession({
+    required String studyId,
+    required String sessionId,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/studies/$studyId/sessions/$sessionId'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        return;
+      } else if (response.statusCode == 403) {
+        throw Exception('Only leaders can delete sessions');
+      } else {
+        throw Exception('Failed to delete session');
+      }
+    } catch (e) {
+      safePrint('Error deleting session: $e');
+      rethrow;
+    }
+  }
+
+  /// Reorder sessions in a study
+  Future<List<Session>> reorderSessions({
+    required String studyId,
+    required List<SessionReorderItem> items,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.put(
+        Uri.parse('$_baseUrl/studies/$studyId/sessions/reorder'),
+        headers: headers,
+        body: json.encode(items.map((i) => i.toJson()).toList()),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((s) => Session.fromJson(s)).toList();
+      } else if (response.statusCode == 403) {
+        throw Exception('Only leaders can reorder sessions');
+      } else {
+        throw Exception('Failed to reorder sessions');
+      }
+    } catch (e) {
+      safePrint('Error reordering sessions: $e');
+      rethrow;
+    }
+  }
 }
 
 /// Model for invite link response
@@ -325,5 +578,89 @@ class InviteLink {
       groupId: json['group_id'] as String,
       groupName: json['group_name'] as String,
     );
+  }
+}
+
+/// Model for a Bible study
+class Study {
+  final String id;
+  final String groupId;
+  final String title;
+  final String? description;
+  final bool isArchived;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Study({
+    required this.id,
+    required this.groupId,
+    required this.title,
+    this.description,
+    required this.isArchived,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Study.fromJson(Map<String, dynamic> json) {
+    return Study(
+      id: json['id'] as String,
+      groupId: json['group_id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      isArchived: json['is_archived'] as bool? ?? false,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+    );
+  }
+}
+
+/// Model for a study session
+class Session {
+  final String id;
+  final String studyId;
+  final String title;
+  final String? description;
+  final int position;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Session({
+    required this.id,
+    required this.studyId,
+    required this.title,
+    this.description,
+    required this.position,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Session.fromJson(Map<String, dynamic> json) {
+    return Session(
+      id: json['id'] as String,
+      studyId: json['study_id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      position: json['position'] as int,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+    );
+  }
+}
+
+/// Model for reordering sessions
+class SessionReorderItem {
+  final String id;
+  final int position;
+
+  SessionReorderItem({
+    required this.id,
+    required this.position,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'position': position,
+    };
   }
 }
