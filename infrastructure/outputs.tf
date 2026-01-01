@@ -7,3 +7,8 @@ output "user_pool_arn" {
   description = "Cognito User Pool ARN."
   value       = module.cognito_user_pool.arn
 }
+
+output "user_pool_client_id" {
+  description = "Cognito User Pool client ID."
+  value       = module.cognito_user_pool.client_id
+}
