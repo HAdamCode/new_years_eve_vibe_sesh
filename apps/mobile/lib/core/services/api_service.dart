@@ -197,7 +197,7 @@ class ApiService {
         headers: headers,
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 204) {
         return;
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized');
@@ -214,5 +214,116 @@ class ApiService {
       safePrint('Error leaving group: $e');
       rethrow;
     }
+  }
+
+  // ===== Invite Methods =====
+
+  /// Create an invite link for a group
+  Future<InviteLink> createInviteLink(String groupId, {int? expiresInDays}) async {
+    try {
+      final headers = await _getHeaders();
+      safePrint('Creating invite link for group $groupId');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/invites/groups/$groupId'),
+        headers: headers,
+        body: expiresInDays != null
+            ? json.encode({'expires_in_days': expiresInDays})
+            : null,
+      );
+
+      if (response.statusCode == 200) {
+        return InviteLink.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else if (response.statusCode == 403) {
+        throw Exception('Only group leaders can create invite links');
+      } else {
+        safePrint('Create invite failed: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to create invite link');
+      }
+    } catch (e) {
+      safePrint('Error creating invite link: $e');
+      rethrow;
+    }
+  }
+
+  /// Preview a group from an invite code (before joining)
+  Future<Group> previewInvite(String code) async {
+    try {
+      final headers = await _getHeaders();
+      safePrint('Previewing invite code $code');
+      final response = await http.get(
+        Uri.parse('$_baseUrl/invites/preview/$code'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        return Group.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else if (response.statusCode == 404) {
+        throw Exception('Invite code not found or expired');
+      } else {
+        safePrint('Preview invite failed: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to preview invite');
+      }
+    } catch (e) {
+      safePrint('Error previewing invite: $e');
+      rethrow;
+    }
+  }
+
+  /// Join a group using an invite code
+  Future<void> joinByInvite(String code) async {
+    try {
+      final headers = await _getHeaders();
+      safePrint('Joining with invite code $code');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/invites/join'),
+        headers: headers,
+        body: json.encode({'code': code}),
+      );
+
+      if (response.statusCode == 200) {
+        return;
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else if (response.statusCode == 404) {
+        throw Exception('Invite code not found');
+      } else if (response.statusCode == 400) {
+        final error = json.decode(response.body);
+        throw Exception(error['detail'] ?? 'Invalid invite');
+      } else {
+        safePrint('Join by invite failed: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to join group');
+      }
+    } catch (e) {
+      safePrint('Error joining by invite: $e');
+      rethrow;
+    }
+  }
+}
+
+/// Model for invite link response
+class InviteLink {
+  final String code;
+  final String link;
+  final String groupId;
+  final String groupName;
+
+  InviteLink({
+    required this.code,
+    required this.link,
+    required this.groupId,
+    required this.groupName,
+  });
+
+  factory InviteLink.fromJson(Map<String, dynamic> json) {
+    return InviteLink(
+      code: json['code'] as String,
+      link: json['link'] as String,
+      groupId: json['group_id'] as String,
+      groupName: json['group_name'] as String,
+    );
   }
 }

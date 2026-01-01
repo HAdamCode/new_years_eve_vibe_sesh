@@ -8,6 +8,7 @@ import '../providers/groups_provider.dart';
 import '../widgets/study_preview_card.dart';
 import '../widgets/participant_avatar_row.dart';
 import '../widgets/empty_state.dart';
+import 'invite_screen.dart';
 import 'study_session_screen.dart';
 import 'create_study_screen.dart';
 
@@ -258,11 +259,28 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                             )
                           : const Icon(Icons.more_vert),
                       onSelected: (value) {
-                        if (value == 'leave') {
+                        if (value == 'invite') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => InviteScreen(group: widget.group),
+                            ),
+                          );
+                        } else if (value == 'leave') {
                           _leaveGroup();
                         }
                       },
                       itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'invite',
+                          child: Row(
+                            children: [
+                              Icon(Icons.person_add),
+                              SizedBox(width: 12),
+                              Text('Invite Members'),
+                            ],
+                          ),
+                        ),
                         const PopupMenuItem(
                           value: 'leave',
                           child: Row(

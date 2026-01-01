@@ -7,8 +7,16 @@ from models.group import Group
 from models.group_member import GroupMember, GroupRole
 
 
-def list_groups(db: Session) -> list[Group]:
-    return list(db.scalars(select(Group).order_by(Group.created_at.desc())))
+def list_groups(db: Session, user_sub: str) -> list[Group]:
+    """List groups that the user is a member of."""
+    return list(
+        db.scalars(
+            select(Group)
+            .join(GroupMember, Group.id == GroupMember.group_id)
+            .where(GroupMember.user_sub == user_sub)
+            .order_by(Group.created_at.desc())
+        )
+    )
 
 
 def create_group(db: Session, name: str, description: str | None, user_sub: str) -> Group:

@@ -23,10 +23,11 @@ def _get_user_sub(claims: dict[str, object]) -> str:
 
 @router.get("", response_model=list[GroupOut])
 def get_groups(
-    _claims: dict[str, object] = Depends(cognito_auth_required),
+    claims: dict[str, object] = Depends(cognito_auth_required),
     db: Session = Depends(get_db),
 ) -> list[GroupOut]:
-    return list_groups(db)
+    user_sub = _get_user_sub(claims)
+    return list_groups(db, user_sub)
 
 
 @router.post("", response_model=GroupOut, status_code=status.HTTP_201_CREATED)

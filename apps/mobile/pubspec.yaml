@@ -45,6 +45,15 @@ dependencies:
   # HTTP client
   http: ^1.2.0
 
+  # QR Code generation
+  qr_flutter: ^4.1.0
+
+  # Share functionality
+  share_plus: ^10.0.0
+
+  # Deep link handling
+  app_links: ^6.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

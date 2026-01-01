@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_provider.dart';
+import '../../../core/services/deep_link_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../data/mock_data.dart';
@@ -11,6 +14,7 @@ import '../widgets/group_card.dart';
 import '../widgets/study_preview_card.dart';
 import 'group_detail_screen.dart';
 import 'create_group_screen.dart';
+import 'join_group_screen.dart';
 import 'study_session_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -22,6 +26,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<StudySession> _upcomingStudies = [];
+  StreamSubscription<String>? _deepLinkSubscription;
 
   @override
   void initState() {
@@ -31,6 +36,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Future.microtask(() {
       ref.read(groupsProvider.notifier).loadGroups();
     });
+
+    // Listen for deep links with invite codes
+    _deepLinkSubscription = deepLinkService.inviteCodeStream.listen((code) {
+      _handleInviteCode(code);
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _handleInviteCode(String code) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => JoinGroupScreen(initialCode: code),
+      ),
+    );
+    if (result == true) {
+      ref.read(groupsProvider.notifier).loadGroups();
+    }
   }
 
   void _loadData() {
@@ -277,16 +305,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 icon: Icons.qr_code_scanner_rounded,
                 label: 'Join',
                 color: AppColors.tertiary,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('QR scanner coming soon!'),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                onTap: () async {
+                  final result = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const JoinGroupScreen(),
                     ),
                   );
+                  if (result == true) {
+                    ref.read(groupsProvider.notifier).loadGroups();
+                  }
                 },
               ),
             ),

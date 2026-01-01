@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from controllers.groups_controller import router as groups_router
 from controllers.health_controller import router as health_router
+from controllers.invite_controller import router as invite_router
 from controllers.studies_controller import router as studies_router
 from controllers.study_sessions_controller import router as study_sessions_router
 from controllers.study_passages_controller import router as study_passages_router
@@ -34,6 +35,7 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(groups_router)
+app.include_router(invite_router)
 app.include_router(studies_router)
 app.include_router(study_sessions_router)
 app.include_router(study_passages_router)
