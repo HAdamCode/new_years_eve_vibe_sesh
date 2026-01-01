@@ -174,17 +174,17 @@ def get_responses(
     session_id: UUID,
     question_id: UUID,
     group_id: UUID,
+    parent_response_id: UUID | None = None,
     _claims: dict[str, object] = Depends(cognito_auth_required),
     db: Session = Depends(get_db),
 ) -> list[StudyQuestionResponseOut]:
-    return list(
-        db.scalars(
-            select(StudyQuestionResponse).where(
-                StudyQuestionResponse.question_id == question_id,
-                StudyQuestionResponse.group_id == group_id,
-            )
-        )
+    query = select(StudyQuestionResponse).where(
+        StudyQuestionResponse.question_id == question_id,
+        StudyQuestionResponse.group_id == group_id,
     )
+    if parent_response_id is not None:
+        query = query.where(StudyQuestionResponse.parent_response_id == parent_response_id)
+    return list(db.scalars(query))
 
 
 @router.post(
@@ -213,8 +213,17 @@ def post_response(
             detail="Only group members can respond",
         )
 
+    if payload.parent_response_id is not None:
+        parent = db.get(StudyQuestionResponse, payload.parent_response_id)
+        if not parent or parent.question_id != question_id or parent.group_id != group_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid parent response",
+            )
+
     item = StudyQuestionResponse(
         question_id=question_id,
+        parent_response_id=payload.parent_response_id,
         group_id=group_id,
         user_sub=user_sub,
         response=payload.response,

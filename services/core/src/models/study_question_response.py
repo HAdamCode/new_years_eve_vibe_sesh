@@ -14,6 +14,7 @@ class StudyQuestionResponse(Base):
             "question_id",
             "group_id",
             "user_sub",
+            "parent_response_id",
             name="uq_question_response",
         ),
     )
@@ -23,6 +24,11 @@ class StudyQuestionResponse(Base):
         UUID(as_uuid=True),
         ForeignKey("study_questions.id", ondelete="CASCADE"),
         nullable=False,
+    )
+    parent_response_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("study_question_responses.id", ondelete="CASCADE"),
+        nullable=True,
     )
     group_id = Column(
         UUID(as_uuid=True),
