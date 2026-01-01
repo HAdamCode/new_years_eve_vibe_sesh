@@ -6,6 +6,7 @@ import 'assignment.dart';
 /// Represents a group Bible study session
 class StudySession {
   final String id;
+  final String? groupId;
   final String title;
   final String? description;
   final DateTime sessionDate;
@@ -18,6 +19,7 @@ class StudySession {
 
   const StudySession({
     required this.id,
+    this.groupId,
     required this.title,
     this.description,
     required this.sessionDate,

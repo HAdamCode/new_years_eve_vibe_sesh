@@ -70,176 +70,235 @@ class _StudySessionScreenState extends State<StudySessionScreen>
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              expandedHeight: 290,
-              floating: false,
-              pinned: true,
-              backgroundColor: colorScheme.surface,
-              foregroundColor: colorScheme.onSurface,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildHeader(context),
-                collapseMode: CollapseMode.pin,
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    Icons.bookmark_outline_rounded,
-                    color: colorScheme.onSurface,
-                  ),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.share_outlined,
-                    color: colorScheme.onSurface,
-                  ),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TabBarDelegate(
-                tabBar: TabBar(
-                  controller: _tabController,
-                  labelStyle: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: theme.textTheme.labelLarge,
-                  tabs: const [
-                    Tab(text: 'Scripture'),
-                    Tab(text: 'Discuss'),
-                    Tab(text: 'Notes'),
-                    Tab(text: 'Practice'),
+      body: Stack(
+        children: [
+          // Background gradient
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 320,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primaryDark,
+                    const Color(0xFF3D1F2B),
                   ],
                 ),
-                color: colorScheme.surface,
               ),
             ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildScriptureTab(),
-            _buildQuestionsTab(),
-            _buildNotesTab(),
-            _buildAssignmentsTab(),
-          ],
-        ),
+          ),
+          // Decorative circles
+          Positioned(
+            top: -30,
+            right: -30,
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 120,
+            left: -50,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          // Main content
+          NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  expandedHeight: 260,
+                  floating: false,
+                  pinned: true,
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: _buildHeader(context),
+                    collapseMode: CollapseMode.pin,
+                  ),
+                  actions: [
+                    Container(
+                      margin: const EdgeInsets.only(right: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.bookmark_outline_rounded,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.share_outlined,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ),
+                  ],
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _TabBarDelegate(
+                    tabBar: TabBar(
+                      controller: _tabController,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                      indicatorColor: AppColors.primary,
+                      indicatorWeight: 3,
+                      labelStyle: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      unselectedLabelStyle: theme.textTheme.labelLarge,
+                      tabs: const [
+                        Tab(text: 'Scripture'),
+                        Tab(text: 'Discuss'),
+                        Tab(text: 'Notes'),
+                        Tab(text: 'Practice'),
+                      ],
+                    ),
+                    color: colorScheme.surface,
+                  ),
+                ),
+              ];
+            },
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildScriptureTab(),
+                _buildQuestionsTab(),
+                _buildNotesTab(),
+                _buildAssignmentsTab(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.primary.withValues(alpha: 0.08),
-            colorScheme.surface,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 56, 20, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Session type badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.groups_rounded,
-                      size: 12,
-                      color: AppColors.secondaryDark,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'GROUP STUDY',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppColors.secondaryDark,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 56, 20, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Session type badge
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
               ),
-              const SizedBox(height: 10),
-              // Title
-              Text(
-                widget.session.title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
-                ),
-              ),
-              if (widget.session.description != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  widget.session.description!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const SizedBox(height: 12),
-              // Meta info row
-              Wrap(
-                spacing: 12,
-                runSpacing: 6,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildMetaChip(
-                    context,
-                    Icons.calendar_today_outlined,
-                    widget.session.formattedDate,
+                  const Icon(
+                    Icons.groups_rounded,
+                    size: 14,
+                    color: Colors.white,
                   ),
-                  if (widget.session.leaderName != null)
-                    _buildMetaChip(
-                      context,
-                      Icons.person_outline_rounded,
-                      widget.session.leaderName!,
+                  const SizedBox(width: 6),
+                  Text(
+                    'GROUP STUDY',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      fontSize: 10,
                     ),
-                  _buildMetaChip(
-                    context,
-                    Icons.menu_book_outlined,
-                    '${widget.session.passages.length} passages',
                   ),
                 ],
               ),
-              const Spacer(),
-              // Participants
-              ParticipantAvatarRow(
-                participants: widget.session.participants,
+            ),
+            const SizedBox(height: 14),
+            // Title
+            Text(
+              widget.session.title,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+                letterSpacing: -0.3,
+              ),
+            ),
+            if (widget.session.description != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                widget.session.description!,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
-          ),
+            const SizedBox(height: 14),
+            // Meta info row
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _buildMetaChip(
+                  context,
+                  Icons.calendar_today_outlined,
+                  widget.session.formattedDate,
+                ),
+                if (widget.session.leaderName != null)
+                  _buildMetaChip(
+                    context,
+                    Icons.person_outline_rounded,
+                    widget.session.leaderName!,
+                  ),
+                _buildMetaChip(
+                  context,
+                  Icons.menu_book_outlined,
+                  '${widget.session.passages.length} passages',
+                ),
+              ],
+            ),
+            const Spacer(),
+            // Participants
+            ParticipantAvatarRow(
+              participants: widget.session.participants,
+            ),
+          ],
         ),
       ),
     );
@@ -247,24 +306,31 @@ class _StudySessionScreenState extends State<StudySessionScreen>
 
   Widget _buildMetaChip(BuildContext context, IconData icon, String text) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: colorScheme.onSurface.withValues(alpha: 0.5),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurface.withValues(alpha: 0.7),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: Colors.white.withValues(alpha: 0.9),
           ),
-        ),
-      ],
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

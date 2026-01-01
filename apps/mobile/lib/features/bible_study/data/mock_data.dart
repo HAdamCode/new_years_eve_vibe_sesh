@@ -3,22 +3,135 @@ import '../models/scripture_passage.dart';
 import '../models/discussion_question.dart';
 import '../models/group_note.dart';
 import '../models/assignment.dart';
+import '../models/group.dart';
 
 /// Mock data for demonstration purposes
 /// Replace with real API calls when backend is ready
 
-final mockStudySession = StudySession(
-  id: '1',
-  title: 'The Sermon on the Mount',
-  description: 'Exploring Jesus\' teachings on kingdom living',
-  sessionDate: DateTime(2024, 12, 31),
-  leaderName: 'Pastor Mike',
-  participants: mockParticipants,
-  passages: mockPassages,
-  questions: mockQuestions,
-  notes: mockNotes,
-  assignments: mockAssignments,
-);
+// ============================================================================
+// GROUPS
+// ============================================================================
+
+final List<Group> mockGroups = [
+  Group(
+    id: 'g1',
+    name: 'Downtown Bible Study',
+    description: 'A welcoming group exploring Scripture together in the heart of the city.',
+    members: mockParticipants.take(6).toList(),
+    createdAt: DateTime(2024, 9, 15),
+  ),
+  Group(
+    id: 'g2',
+    name: 'Young Adults Fellowship',
+    description: 'For young professionals seeking to grow in faith and community.',
+    members: mockParticipants.skip(2).take(4).toList(),
+    createdAt: DateTime(2024, 10, 1),
+  ),
+  Group(
+    id: 'g3',
+    name: 'Women\'s Prayer Circle',
+    description: 'A supportive space for women to study and pray together.',
+    members: [mockParticipants[1], mockParticipants[3], mockParticipants[5]],
+    createdAt: DateTime(2024, 11, 10),
+  ),
+];
+
+// ============================================================================
+// STUDY SESSIONS
+// ============================================================================
+
+final List<StudySession> mockStudySessions = [
+  StudySession(
+    id: '1',
+    groupId: 'g1',
+    title: 'The Sermon on the Mount',
+    description: 'Exploring Jesus\' teachings on kingdom living',
+    sessionDate: DateTime(2024, 12, 31),
+    leaderName: 'Pastor Mike',
+    participants: mockParticipants,
+    passages: mockPassages,
+    questions: mockQuestions,
+    notes: mockNotes,
+    assignments: mockAssignments,
+  ),
+  StudySession(
+    id: '2',
+    groupId: 'g1',
+    title: 'The Lord\'s Prayer',
+    description: 'Learning to pray as Jesus taught',
+    sessionDate: DateTime(2025, 1, 7),
+    leaderName: 'Pastor Mike',
+    participants: mockParticipants.take(4).toList(),
+    passages: [
+      const ScripturePassage(
+        id: '3',
+        book: 'Matthew',
+        chapter: 6,
+        startVerse: 9,
+        endVerse: 13,
+        version: 'ESV',
+        text: 'Pray then like this: "Our Father in heaven, hallowed be your name. Your kingdom come, your will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our debts, as we also have forgiven our debtors. And lead us not into temptation, but deliver us from evil."',
+      ),
+    ],
+    questions: [
+      const DiscussionQuestion(
+        id: '6',
+        question: 'What does it mean to hallow God\'s name in our daily lives?',
+        order: 1,
+      ),
+      const DiscussionQuestion(
+        id: '7',
+        question: 'How do we balance asking for our needs ("daily bread") with trusting God\'s provision?',
+        order: 2,
+      ),
+    ],
+    notes: [],
+    assignments: [
+      const Assignment(
+        id: '6',
+        title: 'Pray the Lord\'s Prayer Daily',
+        description: 'Use the Lord\'s Prayer as a framework for your daily prayer time.',
+        type: AssignmentType.prayer,
+      ),
+    ],
+  ),
+  StudySession(
+    id: '3',
+    groupId: 'g2',
+    title: 'Faith in the Workplace',
+    description: 'Living out your faith Monday through Friday',
+    sessionDate: DateTime(2025, 1, 5),
+    leaderName: 'David Chen',
+    participants: mockParticipants.skip(2).take(4).toList(),
+    passages: [
+      const ScripturePassage(
+        id: '4',
+        book: 'Colossians',
+        chapter: 3,
+        startVerse: 23,
+        endVerse: 24,
+        version: 'ESV',
+        text: 'Whatever you do, work heartily, as for the Lord and not for men, knowing that from the Lord you will receive the inheritance as your reward. You are serving the Lord Christ.',
+      ),
+    ],
+    questions: [
+      const DiscussionQuestion(
+        id: '8',
+        question: 'What does it look like to work "as for the Lord" in your specific job?',
+        order: 1,
+      ),
+    ],
+    notes: [],
+    assignments: [],
+  ),
+];
+
+// Keep for backwards compatibility
+final mockStudySession = mockStudySessions.first;
+
+// ============================================================================
+// PARTICIPANTS
+// ============================================================================
 
 final mockParticipants = [
   const Participant(
@@ -59,6 +172,10 @@ final mockParticipants = [
     isOnline: false,
   ),
 ];
+
+// ============================================================================
+// SCRIPTURE PASSAGES
+// ============================================================================
 
 final mockPassages = [
   const ScripturePassage(
@@ -101,6 +218,10 @@ You are the light of the world. A city set on a hill cannot be hidden. Nor do pe
   ),
 ];
 
+// ============================================================================
+// DISCUSSION QUESTIONS
+// ============================================================================
+
 final mockQuestions = [
   const DiscussionQuestion(
     id: '1',
@@ -134,6 +255,10 @@ final mockQuestions = [
   ),
 ];
 
+// ============================================================================
+// NOTES
+// ============================================================================
+
 final mockNotes = [
   GroupNote(
     id: '1',
@@ -157,6 +282,10 @@ final mockNotes = [
     createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
   ),
 ];
+
+// ============================================================================
+// ASSIGNMENTS
+// ============================================================================
 
 final mockAssignments = [
   const Assignment(
@@ -190,3 +319,21 @@ final mockAssignments = [
     type: AssignmentType.prayer,
   ),
 ];
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/// Get studies for a specific group
+List<StudySession> getStudiesForGroup(String groupId) {
+  return mockStudySessions.where((s) => s.groupId == groupId).toList();
+}
+
+/// Get upcoming studies across all groups
+List<StudySession> getUpcomingStudies() {
+  final now = DateTime.now();
+  return mockStudySessions
+      .where((s) => s.sessionDate.isAfter(now.subtract(const Duration(days: 1))))
+      .toList()
+    ..sort((a, b) => a.sessionDate.compareTo(b.sessionDate));
+}
