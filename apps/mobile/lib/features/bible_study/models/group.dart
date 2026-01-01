@@ -15,10 +15,31 @@ class Group {
     required this.name,
     this.description,
     this.imageUrl,
-    required this.members,
+    this.members = const [],
     required this.createdAt,
     this.isActive = true,
   });
+
+  /// Create a Group from JSON response
+  factory Group.fromJson(Map<String, dynamic> json) {
+    return Group(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      members: const [], // Backend doesn't return members in list view
+    );
+  }
+
+  /// Convert Group to JSON for API requests
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 
   /// Returns the number of members in the group
   int get memberCount => members.length;

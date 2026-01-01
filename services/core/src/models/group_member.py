@@ -8,7 +8,7 @@ from sqlalchemy.sql import func
 from db import Base
 
 
-class GroupRole(str, enum.Enum):
+class GroupRole(enum.Enum):
     MEMBER = "member"
     LEADER = "leader"
 
@@ -20,5 +20,5 @@ class GroupMember(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     group_id = Column(UUID(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)
     user_sub = Column(String(128), nullable=False)
-    role = Column(Enum(GroupRole, name="group_role"), nullable=False, default=GroupRole.MEMBER)
+    role = Column(Enum(GroupRole, name="group_role", values_callable=lambda x: [e.value for e in x]), nullable=False, default=GroupRole.MEMBER)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -6,6 +6,7 @@ import '../../profile/screens/profile_screen.dart';
 import '../data/mock_data.dart';
 import '../models/group.dart';
 import '../models/study_session.dart';
+import '../providers/groups_provider.dart';
 import '../widgets/group_card.dart';
 import '../widgets/study_preview_card.dart';
 import 'group_detail_screen.dart';
@@ -20,18 +21,21 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  List<Group> _groups = [];
   List<StudySession> _upcomingStudies = [];
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _upcomingStudies = getUpcomingStudies();
+    // Defer provider call to avoid modifying state during build
+    Future.microtask(() {
+      ref.read(groupsProvider.notifier).loadGroups();
+    });
   }
 
   void _loadData() {
+    ref.read(groupsProvider.notifier).loadGroups();
     setState(() {
-      _groups = List.from(mockGroups);
       _upcomingStudies = getUpcomingStudies();
     });
   }
@@ -65,16 +69,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
     if (result != null) {
-      setState(() {
-        mockGroups.add(result);
-        _groups = List.from(mockGroups);
-      });
+      // Group was created via the provider, just reload
+      ref.read(groupsProvider.notifier).loadGroups();
     }
   }
 
-  String _getGroupName(String? groupId) {
+  String _getGroupName(String? groupId, List<Group> groups) {
     if (groupId == null) return '';
-    final group = _groups.cast<Group?>().firstWhere(
+    final group = groups.cast<Group?>().firstWhere(
           (g) => g?.id == groupId,
           orElse: () => null,
         );
@@ -84,6 +86,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final groupsState = ref.watch(groupsProvider);
+    final groups = groupsState.groups;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -109,9 +113,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          _buildQuickActions(),
-          _buildGroupsSection(),
-          _buildUpcomingSection(),
+          _buildQuickActions(groups),
+          _buildGroupsSection(groups, groupsState.isLoading),
+          _buildUpcomingSection(groups),
           const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
         ],
       ),
@@ -197,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatItem('${_groups.length}', 'Groups'),
+                  _buildStatItem('${ref.watch(groupsProvider).groups.length}', 'Groups'),
                   Container(
                     width: 1,
                     height: 40,
@@ -240,7 +244,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(List<Group> groups) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
@@ -261,8 +265,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 label: 'Start Study',
                 color: AppColors.secondary,
                 onTap: () {
-                  if (_groups.isNotEmpty) {
-                    _navigateToGroup(_groups.first);
+                  if (groups.isNotEmpty) {
+                    _navigateToGroup(groups.first);
                   }
                 },
               ),
@@ -348,7 +352,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildGroupsSection() {
+  Widget _buildGroupsSection(List<Group> groups, bool isLoading) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -385,33 +389,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _groups.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _buildEmptyGroupsCard(),
-                )
-              : SizedBox(
-                  height: 190,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _groups.length,
-                    itemBuilder: (context, index) {
-                      final group = _groups[index];
-                      final studyCount = getStudiesForGroup(group.id).length;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: index < _groups.length - 1 ? 16 : 0,
-                        ),
-                        child: GroupCard(
-                          group: group,
-                          studyCount: studyCount,
-                          onTap: () => _navigateToGroup(group),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (groups.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _buildEmptyGroupsCard(),
+            )
+          else
+            SizedBox(
+              height: 190,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                scrollDirection: Axis.horizontal,
+                itemCount: groups.length,
+                itemBuilder: (context, index) {
+                  final group = groups[index];
+                  final studyCount = getStudiesForGroup(group.id).length;
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      right: index < groups.length - 1 ? 16 : 0,
+                    ),
+                    child: GroupCard(
+                      group: group,
+                      studyCount: studyCount,
+                      onTap: () => _navigateToGroup(group),
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -479,7 +491,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildUpcomingSection() {
+  Widget _buildUpcomingSection(List<Group> groups) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -555,7 +567,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
                 child: StudyPreviewCard(
                   study: study,
-                  groupName: _getGroupName(study.groupId),
+                  groupName: _getGroupName(study.groupId, groups),
                   onTap: () => _navigateToStudy(study),
                 ),
               );

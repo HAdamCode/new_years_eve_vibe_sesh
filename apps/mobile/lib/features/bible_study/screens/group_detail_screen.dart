@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/mock_data.dart';
 import '../models/group.dart';
 import '../models/study_session.dart';
+import '../providers/groups_provider.dart';
 import '../widgets/study_preview_card.dart';
 import '../widgets/participant_avatar_row.dart';
 import '../widgets/empty_state.dart';
@@ -10,7 +12,7 @@ import 'study_session_screen.dart';
 import 'create_study_screen.dart';
 
 /// Screen showing group details and its studies
-class GroupDetailScreen extends StatefulWidget {
+class GroupDetailScreen extends ConsumerStatefulWidget {
   final Group group;
   final VoidCallback? onGroupUpdated;
 
@@ -21,11 +23,12 @@ class GroupDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<GroupDetailScreen> createState() => _GroupDetailScreenState();
+  ConsumerState<GroupDetailScreen> createState() => _GroupDetailScreenState();
 }
 
-class _GroupDetailScreenState extends State<GroupDetailScreen> {
+class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   late List<StudySession> _studies;
+  bool _isLeavingGroup = false;
 
   @override
   void initState() {
@@ -37,6 +40,80 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     setState(() {
       _studies = getStudiesForGroup(widget.group.id);
     });
+  }
+
+  Future<void> _leaveGroup() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave Group'),
+        content: Text(
+          'Are you sure you want to leave "${widget.group.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isLeavingGroup = true);
+
+    try {
+      final success = await ref
+          .read(groupsProvider.notifier)
+          .leaveGroup(widget.group.id);
+
+      if (!mounted) return;
+
+      if (success) {
+        widget.onGroupUpdated?.call();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Left group successfully'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      } else {
+        setState(() => _isLeavingGroup = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to leave group'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLeavingGroup = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
   }
 
   void _navigateToStudy(StudySession study) {
@@ -105,31 +182,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               ),
             ),
           ),
-          // Decorative circles
-          Positioned(
-            top: -40,
-            right: -40,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 80,
-            left: -60,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
           // Main content
           CustomScrollView(
             slivers: [
@@ -194,9 +246,37 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.settings_outlined),
-                      onPressed: () {},
+                    child: PopupMenuButton<String>(
+                      icon: _isLeavingGroup
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.more_vert),
+                      onSelected: (value) {
+                        if (value == 'leave') {
+                          _leaveGroup();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'leave',
+                          child: Row(
+                            children: [
+                              Icon(Icons.exit_to_app, color: Colors.red),
+                              SizedBox(width: 12),
+                              Text(
+                                'Leave Group',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

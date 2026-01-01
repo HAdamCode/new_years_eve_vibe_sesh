@@ -6,6 +6,7 @@ import 'package:amplify_flutter/amplify_flutter.dart' hide UserProfile;
 import 'package:http/http.dart' as http;
 
 import '../models/user_profile.dart';
+import '../../features/bible_study/models/group.dart';
 
 /// Service for communicating with the backend API
 class ApiService {
@@ -91,6 +92,126 @@ class ApiService {
       }
     } catch (e) {
       safePrint('Error updating profile: $e');
+      rethrow;
+    }
+  }
+
+  // ===== Group Methods =====
+
+  /// List all groups for the current user
+  Future<List<Group>> listGroups() async {
+    try {
+      final headers = await _getHeaders();
+      safePrint('Fetching groups from $_baseUrl/groups');
+      final response = await http.get(
+        Uri.parse('$_baseUrl/groups'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((g) => Group.fromJson(g)).toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else {
+        safePrint('Groups fetch failed: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to load groups: ${response.statusCode}');
+      }
+    } catch (e) {
+      safePrint('Error fetching groups: $e');
+      rethrow;
+    }
+  }
+
+  /// Create a new group
+  Future<Group> createGroup({
+    required String name,
+    String? description,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      safePrint('Creating group at $_baseUrl/groups');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/groups'),
+        headers: headers,
+        body: json.encode({
+          'name': name,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Group.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else if (response.statusCode == 422) {
+        final error = json.decode(response.body);
+        throw Exception(error['detail'] ?? 'Invalid data');
+      } else {
+        safePrint('Group creation failed: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to create group');
+      }
+    } catch (e) {
+      safePrint('Error creating group: $e');
+      rethrow;
+    }
+  }
+
+  /// Join an existing group
+  Future<void> joinGroup(String groupId) async {
+    try {
+      final headers = await _getHeaders();
+      safePrint('Joining group at $_baseUrl/groups/$groupId/join');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/groups/$groupId/join'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        return;
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else if (response.statusCode == 404) {
+        throw Exception('Group not found');
+      } else if (response.statusCode == 400) {
+        final error = json.decode(response.body);
+        throw Exception(error['detail'] ?? 'Already a member');
+      } else {
+        safePrint('Join group failed: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to join group');
+      }
+    } catch (e) {
+      safePrint('Error joining group: $e');
+      rethrow;
+    }
+  }
+
+  /// Leave a group
+  Future<void> leaveGroup(String groupId) async {
+    try {
+      final headers = await _getHeaders();
+      safePrint('Leaving group at $_baseUrl/groups/$groupId/leave');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/groups/$groupId/leave'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        return;
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else if (response.statusCode == 404) {
+        throw Exception('Group not found');
+      } else if (response.statusCode == 400) {
+        final error = json.decode(response.body);
+        throw Exception(error['detail'] ?? 'Not a member');
+      } else {
+        safePrint('Leave group failed: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to leave group');
+      }
+    } catch (e) {
+      safePrint('Error leaving group: $e');
       rethrow;
     }
   }

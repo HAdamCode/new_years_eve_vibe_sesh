@@ -36,7 +36,15 @@ def post_group(
     db: Session = Depends(get_db),
 ) -> GroupOut:
     user_sub = _get_user_sub(claims)
-    return create_group(db, payload.name, payload.description, user_sub)
+    try:
+        return create_group(db, payload.name, payload.description, user_sub)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
 
 
 @router.post("/{group_id}/join", response_model=GroupMemberOut)

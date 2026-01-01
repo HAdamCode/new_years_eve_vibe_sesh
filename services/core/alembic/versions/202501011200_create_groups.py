@@ -17,6 +17,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Create groups table
     op.create_table(
         "groups",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
@@ -30,14 +31,10 @@ def upgrade() -> None:
         ),
     )
 
-    group_role_enum = postgresql.ENUM(
-        "member",
-        "leader",
-        name="group_role",
-        create_type=False,
-    )
-    group_role_enum.create(op.get_bind(), checkfirst=True)
+    # Create enum type for roles using raw SQL to avoid duplication issues
+    op.execute("CREATE TYPE group_role AS ENUM ('member', 'leader')")
 
+    # Create group_members table
     op.create_table(
         "group_members",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
@@ -48,7 +45,11 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("user_sub", sa.String(length=128), nullable=False),
-        sa.Column("role", group_role_enum, nullable=False),
+        sa.Column(
+            "role",
+            postgresql.ENUM("member", "leader", name="group_role", create_type=False),
+            nullable=False,
+        ),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
