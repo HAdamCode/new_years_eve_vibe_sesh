@@ -5,6 +5,8 @@ from .study_sessions import (
     StudySessionReorderItem,
     StudySessionUpdate,
 )
+from .study_passages import StudyPassageCreate, StudyPassageOut
+from .study_questions import StudyQuestionCreate, StudyQuestionOut
 from .user import UserCreate, UserResponse, UserUpdate
 
 __all__ = [
@@ -15,6 +17,10 @@ __all__ = [
     "StudySessionOut",
     "StudySessionReorderItem",
     "StudySessionUpdate",
+    "StudyPassageCreate",
+    "StudyPassageOut",
+    "StudyQuestionCreate",
+    "StudyQuestionOut",
     "UserCreate",
     "UserResponse",
     "UserUpdate",
