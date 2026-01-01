@@ -15,6 +15,7 @@ if config.config_file_name is not None:
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from db import Base  # noqa: E402
+import models  # noqa: E402,F401
 
 
 def get_database_url() -> str:

@@ -6,8 +6,8 @@ services:
       context: ./core
     ports:
       - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql+psycopg2://app:app@postgres:5432/app
+    env_file:
+      - .env
     depends_on:
       - postgres
 
