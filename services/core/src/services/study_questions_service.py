@@ -82,3 +82,31 @@ def delete_question(db: Session, question_id: UUID, user_sub: str) -> None:
 
     db.delete(item)
     db.commit()
+
+
+def update_question(
+    db: Session,
+    question_id: UUID,
+    user_sub: str,
+    question: str | None,
+    position: int | None,
+) -> StudyQuestion:
+    item = db.get(StudyQuestion, question_id)
+    if not item:
+        raise ValueError("question_not_found")
+
+    study = _get_study_for_session(db, item.session_id)
+    if not study:
+        raise ValueError("session_not_found")
+
+    if not _is_group_leader(db, study.group_id, user_sub):
+        raise ValueError("forbidden")
+
+    if question is not None:
+        item.question = question
+    if position is not None:
+        item.position = position
+
+    db.commit()
+    db.refresh(item)
+    return item

@@ -9,6 +9,11 @@ class StudyQuestionCreate(BaseModel):
     position: int | None = None
 
 
+class StudyQuestionUpdate(BaseModel):
+    question: str | None = None
+    position: int | None = None
+
+
 class StudyQuestionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

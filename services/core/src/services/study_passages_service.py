@@ -82,3 +82,43 @@ def delete_passage(db: Session, passage_id: UUID, user_sub: str) -> None:
 
     db.delete(passage)
     db.commit()
+
+
+def update_passage(
+    db: Session,
+    passage_id: UUID,
+    user_sub: str,
+    book: str | None,
+    chapter: int | None,
+    start_verse: int | None,
+    end_verse: int | None,
+    version: str | None,
+    text: str | None,
+) -> StudyPassage:
+    passage = db.get(StudyPassage, passage_id)
+    if not passage:
+        raise ValueError("passage_not_found")
+
+    study = _get_study_for_session(db, passage.session_id)
+    if not study:
+        raise ValueError("session_not_found")
+
+    if not _is_group_leader(db, study.group_id, user_sub):
+        raise ValueError("forbidden")
+
+    if book is not None:
+        passage.book = book
+    if chapter is not None:
+        passage.chapter = chapter
+    if start_verse is not None:
+        passage.start_verse = start_verse
+    if end_verse is not None:
+        passage.end_verse = end_verse
+    if version is not None:
+        passage.version = version
+    if text is not None:
+        passage.text = text
+
+    db.commit()
+    db.refresh(passage)
+    return passage
